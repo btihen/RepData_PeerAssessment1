@@ -50,7 +50,7 @@ library(data.table)
 activity_dt = data.table(activity_df)
 steps_each_day = activity_dt[,sum(steps),by=date]
 setnames(steps_each_day, "V1", "daily_step_total")
-barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
+barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (Ingoring missing Observations)")
 ```
 
 
@@ -78,7 +78,7 @@ Calculation | Results without imputation
 interval_steps_mean_dt = activity_dt[,mean(steps, na.rm=TRUE), by=interval]
 setnames(interval_steps_mean_dt, "V1", "average_inverval_steps")
 # graph interval averages as time series plot
-plot( interval_steps_mean_dt, type="l", xlab="5-minute intervals", ylab="average steps", main="Average Steps at each Interval over all Days (w/o imputed data)" )
+plot( interval_steps_mean_dt, type="l", xlab="5-minute intervals", ylab="average steps", main="Mean Steps per Interval over all Days  (ignoring MISSING Observations)" )
 ```
 
 
@@ -91,4 +91,88 @@ max_steps_interval = interval_steps_mean_dt$interval[[max_steps_location]]
 ```
 
 The interval with the maximum steps is: **`r max_steps_interval`**
+
+## Imputing missing values
+
+1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
+
+```{r missing_observations}
+missing_observations = sum(is.na(activity_dt$steps))
+total_observations = nrow(activity_dt)
+missing_percent = missing_observations / total_observations * 100
+```
+
+Description | Count
+------------|------
+Missing Observations | `r missing_observations`
+Total Observations   | `r total_observations`
+
+Percentage of missing observations: **`r options("digits"=1);missing_percent`%**
+
+
+2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated.
+
+The strategy used is to will fill-in missing values with the median intervals value over all the days of the study.  This is probably a reasonable way to impute missing values, since many people have a daily rythm of sleep and activity.  A complicating factor is of course weekends when many people change their activities, but since a simple strategy can be used, this compounding factor will be ignored for now.
+
+3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+```{r fill_missing}
+# calculate each interval's median steps
+interval_steps_median_dt = activity_dt[,median(steps, na.rm=TRUE), by=interval]
+setnames(interval_steps_median_dt, "V1", "median_inverval_steps")
+
+# build a copy for imputed values
+activity_dt <- merge(activity_dt, interval_steps_median_dt, by="interval", all=FALSE)
+
+# mark observations with missing data
+activity_dt$na_data <- is.na(activity_dt$steps)
+
+# copy the steps to create an imputed steps field
+activity_dt$imputed_steps <- activity_dt$steps
+
+activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
+# create a clean imputed value data frame
+#impute_activity_dt[,c("na_data", "median_inverval_steps") := NULL]
+```
+
+
+4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+* HISTOGRAM of imputed data
+
+```{r imputed_histogram}
+imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
+setnames(imputed_steps_each_day, "V1", "daily_step_total")
+barplot(imputed_steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (with Imputed Observations)")
+```
+
+
+* CALCULATE -- mean and median
+
+```{r imputed_mean_median}
+imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
+setnames(imputed_steps_each_day, "V1", "daily_step_total")
+imputed_mean_steps_per_day = mean( imputed_steps_each_day$daily_step_total )
+imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total )
+```
+
+Data Used | Mean | Median 
+----------|------|-------
+Impute Missing Steps | `r options("scipen"=100, "digits"=1);imputed_mean_steps_per_day` | `r imputed_median_steps_per_day`
+Omit Missing Steps   | `r options("scipen"=100, "digits"=1);mean_steps_per_day` | `r median_steps_per_day`
+
+* Do the result differ? If so what is the impact on steps per day?
+
+Ingoring missing values and imputing missing values produces different results.
+Ingoring missing values results in calculations that indicate MORE steps per day than with imputed values (indicating possibly inflated results).
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
+
+
+
+2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
+
 
