@@ -63,7 +63,32 @@ median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
 ```
 
 Calculation | Results without imputation
-------------|----------------------_----
+------------|---------------------------
 *Mean*      | `r options("scipen"=100, "digits"=4);mean_steps_per_day`   
 *Median*    | `r options("scipen"=100, "digits"=4);median_steps_per_day` 
+
+
+
+## What is the average daily activity pattern?
+
+1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+```{r interval_activity_plot}
+# calculate interval averages over each day
+interval_steps_mean_dt = activity_dt[,mean(steps, na.rm=TRUE), by=interval]
+setnames(interval_steps_mean_dt, "V1", "average_inverval_steps")
+# graph interval averages as time series plot
+plot( interval_steps_mean_dt, type="l", xlab="5-minute intervals", ylab="average steps", main="Average Steps at each Interval over all Days (w/o imputed data)" )
+```
+
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+```{r max_steps_in_interval}
+max_interval_steps = interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]
+max_steps_location = which( interval_steps_mean_dt$average_inverval_steps == max_interval_steps)
+max_steps_interval = interval_steps_mean_dt$interval[[max_steps_location]]
+```
+
+The interval with the maximum steps is: **`r max_steps_interval`**
 
