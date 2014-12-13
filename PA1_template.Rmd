@@ -46,20 +46,29 @@ activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colCl
 
 1. Make a histogram of the total number of steps taken each day
 
-```{r steps_per_day, eval = FALSE}
+```{r imputed_steps_each_day_plot}
 # AVERAGE STEPS / DAY
 library(data.table)
 activity_dt = data.table(activity_df)
 steps_each_day = activity_dt[,sum(steps),by=date]
 setnames(steps_each_day, "V1", "daily_step_total")
-mean_steps_per_day = mean( steps_each_day$daily_step_total, na.rm=TRUE )
-median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
+barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
 ```
+
 
 2. Calculate and report the **mean** and **median** total number of steps taken per day
 
-The mean steps taken per day are: `r mean( steps_each_day$daily_step_total, na.rm=TRUE )`.
-The median steps taken per day are: `r median( steps_each_day$daily_step_total, na.rm=TRUE )`.
+The mean steps taken per day are: 
+```{r mean_daily_steps}
+mean_steps_per_day = mean( steps_each_day$daily_step_total, na.rm=TRUE )
+mean_steps_per_day
+```
+
+The median steps taken per day are: 
+```{r median_daily_steps}
+median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
+median_steps_per_day
+```
 
 
 ## What is the average daily activity pattern?
@@ -76,19 +85,33 @@ plot( interval_steps_mean_dt, type="l", xlab="interval", ylab="average steps", m
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-The interval with the maximum steps is: `r activity_dt[,max(steps, na.rm=TRUE )]`
-The interval with the maximum average steps is: `r interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]`
+The interval with the maximum steps is: 
+```{r max_steps_in_interval}
+activity_dt[,max(steps, na.rm=TRUE )]
+```
+The interval with the maximum average steps is: 
+```{r max_avg_steps_in_interval}
+interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]
+```
 
 ## Imputing missing values
 
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
 
-The number of missing values in the data set are: `r sum(is.na(activity_dt$steps))`
-The total number of observations in the data set are: `r nrow(activity_dt)`
+The number of missing values in the data set are: 
+```{r observations_missing_value_count}
+sum(is.na(activity_dt$steps))
+```
+
+The total number of observations in the data set are: 
+```{r total_observations}
+nrow(activity_dt)
+```
+
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated.
 
-This strategy is to will fill-in missing values with the median intervals value over all the days of the study.  This is probably a reasonable way to impute missing values, since many people have a daily rythm of sleep and activity.  A complicating factor is of course weekends when many people change their activities, but since a simple strategy can be used, this compounding factor will be ignored for now.
+The strategy used is to will fill-in missing values with the median intervals value over all the days of the study.  This is probably a reasonable way to impute missing values, since many people have a daily rythm of sleep and activity.  A complicating factor is of course weekends when many people change their activities, but since a simple strategy can be used, this compounding factor will be ignored for now.
 
 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
@@ -120,13 +143,27 @@ imputed_activity_dt = data.table( imputed_activity_df )
 ```{r imputed_calculations}
 imputed_steps_each_day = imputed_activity_dt[,sum(steps),by=date]
 setnames(imputed_steps_each_day, "V1", "daily_step_total")
-imputed_mean_steps_per_day = mean( imputed_steps_each_day$daily_step_total, na.rm=TRUE )
-imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total, na.rm=TRUE )
+imputed_mean_steps_per_day = mean( imputed_steps_each_day$daily_step_total )
+imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total )
 ```
+
+Average number of steps per day (using imputed data): 
+```{r}
+mean( imputed_steps_each_day$daily_step_total )
+```
+
+Median number of steps per day (using imputed data): 
+```{r}
+median( imputed_steps_each_day$daily_step_total )
+```
+
+
+
+
 
 * histogram of total steps each day of imputed data
 
-```{r view_steps_each_day}
+```{r imputed_steps_each_day_plot}
 barplot(imputed_steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
 ```
 

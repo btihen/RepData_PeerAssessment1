@@ -1,0 +1,69 @@
+---
+title: "PA1_template_w_answers.Rmd"
+output: html_document
+keep_md: true
+---
+
+## Loading and preprocessing the data
+
+1. Load the data (i.e. `read.csv()`)
+
+* download the data if it is necessary (missing)
+* create a data directory
+* unpack (unzip the data -- into the data directory)
+* load the data
+
+2. Process/transform the data (if necessary) into a format suitable for your analysis
+
+This is done on loading the data with the appropriate switches:
+* nsure the data is ready for usage by:
+* na.strings="NA" -- text marked as NA is read as missing data
+* colClasses=c(NA,"Date",NA) -- the second column is recognized as date values and other are the default values
+
+The code that accomplishes this is:
+
+```{r download_read_data}
+# file already included in assignment -- next line show how to get the data if needed
+# download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity-data.zip", methodi="curl")
+# create a data directory & unzip the data
+data_path = "data"
+dir.create( data_path )
+unzip("activity.zip", exdir="data", overwrite=TRUE)
+data_file = list.files(path = data_path)[1]
+path_file = file.path(data_path, data_file)
+# READ the data into R
+#      missing data is marked as NA (ensure the data is suitable for processing)
+#      the second column is a date format (ensure data is suitable for processing)
+#activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", row.names=NULL)
+#activity_df[[2]] <- as.Date(activity_df[[2]])
+activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colClasses=c(NA,"Date",NA),row.names=NULL)
+```
+
+
+## What is mean total number of steps taken per day?
+
+1. Make a histogram of the total number of steps taken each day
+
+```{r imputed_steps_each_day_plot}
+# AVERAGE STEPS / DAY
+library(data.table)
+activity_dt = data.table(activity_df)
+steps_each_day = activity_dt[,sum(steps),by=date]
+setnames(steps_each_day, "V1", "daily_step_total")
+barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
+```
+
+
+2. Calculate and report the **mean** and **median** total number of steps taken per day
+
+The mean steps taken per day are: 
+```{r mean_median_daily_steps}
+mean_steps_per_day = mean( steps_each_day$daily_step_total, na.rm=TRUE )
+median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
+```
+
+Calculation | Results without imputation
+------------|----------------------_----
+*Mean*      | `r options("scipen"=100, "digits"=4);mean_steps_per_day`   
+*Median*    | `r options("scipen"=100, "digits"=4);median_steps_per_day` 
+
