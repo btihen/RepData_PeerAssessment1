@@ -214,10 +214,10 @@ Ideally the distribution of the original data should be investigated before and 
 
 
 ```{r weekday_calc}
-activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
+#activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
 activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
 activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
-kable(head(activity_dt[]), format = "markdown")
+kable(head( activity_dt[ ] ), format = "markdown")
 ```
 
 

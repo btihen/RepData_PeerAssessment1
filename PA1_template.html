@@ -329,10 +329,10 @@ imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total )
 <ol style="list-style-type: decimal">
 <li><strong>Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.</strong></li>
 </ol>
-<pre class="r"><code>activity_dt$day_of_week &lt;- as.POSIXlt(activity_dt$date)$wday
+<pre class="r"><code>#activity_dt$day_of_week &lt;- as.POSIXlt(activity_dt$date)$wday
 activity_dt$day_name &lt;- as.factor( c(&quot;Sunday&quot;, &quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;, &quot;Saturday&quot;)[as.POSIXlt(activity_dt$date)$wday + 1] )
 activity_dt$day_type &lt;- as.factor( c(&quot;Weekend&quot;, &quot;Weekday&quot;, &quot;Weekday&quot;, &quot;Weekday&quot;, &quot;Weekday&quot;, &quot;Weekday&quot;, &quot;Weekend&quot;)[as.POSIXlt(activity_dt$date)$wday + 1] )
-kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
+kable(head( activity_dt[ ] ), format = &quot;markdown&quot;)</code></pre>
 <table>
 <thead>
 <tr class="header">
@@ -342,7 +342,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <th align="right">median_inverval_steps</th>
 <th align="left">na_data</th>
 <th align="right">imputed_steps</th>
-<th align="right">day_of_week</th>
 <th align="left">day_name</th>
 <th align="left">day_type</th>
 </tr>
@@ -355,7 +354,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">TRUE</td>
 <td align="right">0</td>
-<td align="right">1</td>
 <td align="left">Monday</td>
 <td align="left">Weekday</td>
 </tr>
@@ -366,7 +364,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">FALSE</td>
 <td align="right">0</td>
-<td align="right">2</td>
 <td align="left">Tuesday</td>
 <td align="left">Weekday</td>
 </tr>
@@ -377,7 +374,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">FALSE</td>
 <td align="right">0</td>
-<td align="right">3</td>
 <td align="left">Wednesday</td>
 <td align="left">Weekday</td>
 </tr>
@@ -388,7 +384,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">FALSE</td>
 <td align="right">47</td>
-<td align="right">4</td>
 <td align="left">Thursday</td>
 <td align="left">Weekday</td>
 </tr>
@@ -399,7 +394,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">FALSE</td>
 <td align="right">0</td>
-<td align="right">5</td>
 <td align="left">Friday</td>
 <td align="left">Weekday</td>
 </tr>
@@ -410,7 +404,6 @@ kable(head(activity_dt[]), format = &quot;markdown&quot;)</code></pre>
 <td align="right">0</td>
 <td align="left">FALSE</td>
 <td align="right">0</td>
-<td align="right">6</td>
 <td align="left">Saturday</td>
 <td align="left">Weekend</td>
 </tr>

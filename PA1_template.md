@@ -239,22 +239,22 @@ Ideally the distribution of the original data should be investigated before and 
 
 
 ```r
-activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
+#activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
 activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
 activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
-kable(head(activity_dt[]), format = "markdown")
+kable(head( activity_dt[ ] ), format = "markdown")
 ```
 
 
 
-| interval| steps|date       | median_inverval_steps|na_data | imputed_steps| day_of_week|day_name  |day_type |
-|--------:|-----:|:----------|---------------------:|:-------|-------------:|-----------:|:---------|:--------|
-|        0|    NA|2012-10-01 |                     0| TRUE   |             0|           1|Monday    |Weekday  |
-|        0|     0|2012-10-02 |                     0|FALSE   |             0|           2|Tuesday   |Weekday  |
-|        0|     0|2012-10-03 |                     0|FALSE   |             0|           3|Wednesday |Weekday  |
-|        0|    47|2012-10-04 |                     0|FALSE   |            47|           4|Thursday  |Weekday  |
-|        0|     0|2012-10-05 |                     0|FALSE   |             0|           5|Friday    |Weekday  |
-|        0|     0|2012-10-06 |                     0|FALSE   |             0|           6|Saturday  |Weekend  |
+| interval| steps|date       | median_inverval_steps|na_data | imputed_steps|day_name  |day_type |
+|--------:|-----:|:----------|---------------------:|:-------|-------------:|:---------|:--------|
+|        0|    NA|2012-10-01 |                     0| TRUE   |             0|Monday    |Weekday  |
+|        0|     0|2012-10-02 |                     0|FALSE   |             0|Tuesday   |Weekday  |
+|        0|     0|2012-10-03 |                     0|FALSE   |             0|Wednesday |Weekday  |
+|        0|    47|2012-10-04 |                     0|FALSE   |            47|Thursday  |Weekday  |
+|        0|     0|2012-10-05 |                     0|FALSE   |             0|Friday    |Weekday  |
+|        0|     0|2012-10-06 |                     0|FALSE   |             0|Saturday  |Weekend  |
 
 
 2. **Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).**
