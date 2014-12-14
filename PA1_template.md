@@ -1,5 +1,14 @@
 # Reproducible Research: Peer Assessment 1
 
+Add the libraries needed for this project (supressing warnings and messages):
+
+
+```r
+suppressWarnings(suppressMessages( library(knitr) ))
+suppressWarnings(suppressMessages( library(lattice) ))
+suppressWarnings(suppressMessages( library(data.table) ))
+```
+
 ## Loading and preprocessing the data
 
 1. Load the data (i.e. `read.csv()`)
@@ -9,14 +18,7 @@
 * unpack (unzip the data -- into the data directory)
 * load the data
 
-2. Process/transform the data (if necessary) into a format suitable for your analysis
-
-This is done on loading the data with the appropriate switches:
-* nsure the data is ready for usage by:
-* na.strings="NA" -- text marked as NA is read as missing data
-* colClasses=c(NA,"Date",NA) -- the second column is recognized as date values and other are the default values
-
-The code that accomplishes this is:
+Done with the following code:
 
 
 ```r
@@ -24,14 +26,7 @@ The code that accomplishes this is:
 # download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity-data.zip", methodi="curl")
 # create a data directory & unzip the data
 data_path = "data"
-dir.create( data_path )
-```
-
-```
-## Warning in dir.create(data_path): 'data' already exists
-```
-
-```r
+dir.create( data_path, showWarnings = FALSE )
 unzip("activity.zip", exdir="data", overwrite=TRUE)
 data_file = list.files(path = data_path)[1]
 path_file = file.path(data_path, data_file)
@@ -44,6 +39,23 @@ activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colCl
 ```
 
 
+2. Process/transform the data (if necessary) into a format suitable for your analysis
+
+This is done on loading the data with the appropriate switches:
+* nsure the data is ready for usage by:
+* na.strings="NA" -- text marked as NA is read as missing data
+* colClasses=c(NA,"Date",NA) -- the second column is recognized as date values and other are the default values
+
+The code that accomplishes this is the read.table command:
+
+
+```r
+activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colClasses=c(NA,"Date",NA),row.names=NULL)
+# equivalent to:
+activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", row.names=NULL)
+activity_df[[2]] <- as.Date(activity_df[[2]])
+```
+
 ## What is mean total number of steps taken per day?
 
 1. Make a histogram of the total number of steps taken each day
@@ -51,7 +63,6 @@ activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colCl
 
 ```r
 # AVERAGE STEPS / DAY
-library(data.table)
 activity_dt = data.table(activity_df)
 steps_each_day = activity_dt[,sum(steps),by=date]
 setnames(steps_each_day, "V1", "daily_step_total")
@@ -72,7 +83,7 @@ median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
 
 Calculation | Results without imputation
 ------------|---------------------------
-*Mean*      | 10766.1887   
+*Mean*      | 10766.2   
 *Median*    | 10765 
 
 
@@ -144,41 +155,36 @@ activity_dt$na_data <- is.na(activity_dt$steps)
 # copy the steps to create an imputed steps field
 activity_dt$imputed_steps <- activity_dt$steps
 
+# in all locations where there is missing values replace the missing value in imputed_steps
+# with the median value for that time interval
 activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
+
+# create a new data set just for imputed values
+imputed_data_set <- data.frame( activity_dt$date, activity_dt$interval, activity_dt$imputed_steps )
+# fix the column names
+setnames( imputed_data_set, "activity_dt.date", "date" )
+setnames( imputed_data_set, "activity_dt.interval", "interval" )
+setnames( imputed_data_set, "activity_dt.imputed_steps", "steps" )
 ```
 
-```
-##        interval steps       date median_inverval_steps na_data
-##     1:        0    NA 2012-10-01                     0    TRUE
-##     2:        0     0 2012-10-02                     0   FALSE
-##     3:        0     0 2012-10-03                     0   FALSE
-##     4:        0    47 2012-10-04                     0   FALSE
-##     5:        0     0 2012-10-05                     0   FALSE
-##    ---                                                        
-## 17564:     2355     0 2012-11-26                     0   FALSE
-## 17565:     2355     0 2012-11-27                     0   FALSE
-## 17566:     2355     0 2012-11-28                     0   FALSE
-## 17567:     2355     0 2012-11-29                     0   FALSE
-## 17568:     2355    NA 2012-11-30                     0    TRUE
-##        imputed_steps
-##     1:             0
-##     2:             0
-##     3:             0
-##     4:            47
-##     5:             0
-##    ---              
-## 17564:             0
-## 17565:             0
-## 17566:             0
-## 17567:             0
-## 17568:             0
-```
+resulting is a new data set that has imputed values:
+
 
 ```r
-# create a clean imputed value data frame
-#impute_activity_dt[,c("na_data", "median_inverval_steps") := NULL]
+#kable(head(activity_dt[]), format = "markdown")
+kable(head(imputed_data_set[]), format = "markdown")
 ```
 
+
+
+|date       | interval| steps|
+|:----------|--------:|-----:|
+|2012-10-01 |        0|     0|
+|2012-10-02 |        0|     0|
+|2012-10-03 |        0|     0|
+|2012-10-04 |        0|    47|
+|2012-10-05 |        0|     0|
+|2012-10-06 |        0|     0|
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
@@ -211,8 +217,11 @@ Omit Missing Steps   | 10766.2 | 10765
 
 * Do the result differ? If so what is the impact on steps per day?
 
-Ingoring missing values and imputing missing values produces different results.
-Ingoring missing values results in calculations that indicate MORE steps per day than with imputed values (indicating possibly inflated results).
+Ingoring missing values and imputing missing values produces different results. Differences include:
+* imputed values produce fewer average steps per interval (indicating possibly inflated results when ignoring missing values).
+* the mean and median have a wider split with imputed data (implying that the data is no longer randomly distributed -- with missing values the mean and median were essentially the same)
+
+Ideally the distribution of the original data should be investigated before and after imputing to best understand the data and the effect of the analysis method.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
@@ -225,32 +234,25 @@ Ingoring missing values results in calculations that indicate MORE steps per day
 activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
 activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
 activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
-str(activity_dt)
+kable(head(activity_dt[]), format = "markdown")
 ```
 
-```
-## Classes 'data.table' and 'data.frame':	17568 obs. of  9 variables:
-##  $ interval             : int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ steps                : int  NA 0 0 47 0 0 0 NA 0 34 ...
-##  $ date                 : Date, format: "2012-10-01" "2012-10-02" ...
-##  $ median_inverval_steps: int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ na_data              : logi  TRUE FALSE FALSE FALSE FALSE FALSE ...
-##  $ imputed_steps        : int  0 0 0 47 0 0 0 0 0 34 ...
-##  $ day_of_week          : int  1 2 3 4 5 6 0 1 2 3 ...
-##  $ day_name             : Factor w/ 7 levels "Friday","Monday",..: 2 6 7 5 1 3 4 2 6 7 ...
-##  $ day_type             : Factor w/ 2 levels "Weekday","Weekend": 1 1 1 1 1 2 2 1 1 1 ...
-##  - attr(*, "sorted")= chr "interval"
-##  - attr(*, ".internal.selfref")=<externalptr> 
-##  - attr(*, "index")= atomic  
-##   ..- attr(*, "na_data")= int  2 3 4 5 6 7 9 10 11 12 ...
-```
+
+
+| interval| steps|date       | median_inverval_steps|na_data | imputed_steps| day_of_week|day_name  |day_type |
+|--------:|-----:|:----------|---------------------:|:-------|-------------:|-----------:|:---------|:--------|
+|        0|    NA|2012-10-01 |                     0| TRUE   |             0|           1|Monday    |Weekday  |
+|        0|     0|2012-10-02 |                     0|FALSE   |             0|           2|Tuesday   |Weekday  |
+|        0|     0|2012-10-03 |                     0|FALSE   |             0|           3|Wednesday |Weekday  |
+|        0|    47|2012-10-04 |                     0|FALSE   |            47|           4|Thursday  |Weekday  |
+|        0|     0|2012-10-05 |                     0|FALSE   |             0|           5|Friday    |Weekday  |
+|        0|     0|2012-10-06 |                     0|FALSE   |             0|           6|Saturday  |Weekend  |
 
 
 2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
 
 
 ```r
-library(lattice)
 day_type_steps_each_interval = activity_dt[ ,sum(imputed_steps), by=list(interval, day_type) ]
 setnames(day_type_steps_each_interval, "V1", "mean_imputed_interval_steps")
 xyplot( mean_imputed_interval_steps ~ interval | day_type, 
@@ -263,3 +265,5 @@ xyplot( mean_imputed_interval_steps ~ interval | day_type,
 ```
 
 ![](./PA1_template_files/figure-html/weekend_weekday_compare_plot-1.png) 
+
+This graph shows that there are different activity levels on the weekends and weekdays.  Ideally the imputation method could be improved to take this into account too, since one of the imputation assumptions was that the activity level at a specific time of day would be similar each day -- this is clearly not true.
