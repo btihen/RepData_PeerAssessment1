@@ -175,13 +175,24 @@ Ingoring missing values results in calculations that indicate MORE steps per day
 
 ```{r weekday_calc}
 activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
-activity_dt$day_name <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
-    "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1]
-activity_dt$day_type <- c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", 
-    "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1]
-activity_dt
+activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
+activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
 str(activity_dt)
 ```
 
 
 2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
+
+```{r weekend_weekday_compare_plot}
+library(lattice)
+day_type_steps_each_interval = activity_dt[ ,sum(imputed_steps), by=list(interval, day_type) ]
+setnames(day_type_steps_each_interval, "V1", "mean_imputed_interval_steps")
+xyplot( mean_imputed_interval_steps ~ interval | day_type, 
+        type = "l",
+        data = day_type_steps_each_interval,
+        main="Steps per Inteval averaged over All days (using imputed data)", 
+        ylab="Average Steps", 
+        xlab="5-Minute Interval",
+        layout=c(1,2) )
+
+```

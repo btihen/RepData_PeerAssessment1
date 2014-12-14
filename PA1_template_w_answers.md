@@ -223,41 +223,8 @@ Ingoring missing values results in calculations that indicate MORE steps per day
 
 ```r
 activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
-activity_dt$day_name <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
-    "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1]
-activity_dt$day_type <- c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", 
-    "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1]
-activity_dt
-```
-
-```
-##        interval steps       date median_inverval_steps na_data
-##     1:        0    NA 2012-10-01                     0    TRUE
-##     2:        0     0 2012-10-02                     0   FALSE
-##     3:        0     0 2012-10-03                     0   FALSE
-##     4:        0    47 2012-10-04                     0   FALSE
-##     5:        0     0 2012-10-05                     0   FALSE
-##    ---                                                        
-## 17564:     2355     0 2012-11-26                     0   FALSE
-## 17565:     2355     0 2012-11-27                     0   FALSE
-## 17566:     2355     0 2012-11-28                     0   FALSE
-## 17567:     2355     0 2012-11-29                     0   FALSE
-## 17568:     2355    NA 2012-11-30                     0    TRUE
-##        imputed_steps day_of_week  day_name day_type
-##     1:             0           1    Monday  Weekday
-##     2:             0           2   Tuesday  Weekday
-##     3:             0           3 Wednesday  Weekday
-##     4:            47           4  Thursday  Weekday
-##     5:             0           5    Friday  Weekday
-##    ---                                             
-## 17564:             0           1    Monday  Weekday
-## 17565:             0           2   Tuesday  Weekday
-## 17566:             0           3 Wednesday  Weekday
-## 17567:             0           4  Thursday  Weekday
-## 17568:             0           5    Friday  Weekday
-```
-
-```r
+activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
+activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
 str(activity_dt)
 ```
 
@@ -270,8 +237,8 @@ str(activity_dt)
 ##  $ na_data              : logi  TRUE FALSE FALSE FALSE FALSE FALSE ...
 ##  $ imputed_steps        : int  0 0 0 47 0 0 0 0 0 34 ...
 ##  $ day_of_week          : int  1 2 3 4 5 6 0 1 2 3 ...
-##  $ day_name             : chr  "Monday" "Tuesday" "Wednesday" "Thursday" ...
-##  $ day_type             : chr  "Weekday" "Weekday" "Weekday" "Weekday" ...
+##  $ day_name             : Factor w/ 7 levels "Friday","Monday",..: 2 6 7 5 1 3 4 2 6 7 ...
+##  $ day_type             : Factor w/ 2 levels "Weekday","Weekend": 1 1 1 1 1 2 2 1 1 1 ...
 ##  - attr(*, "sorted")= chr "interval"
 ##  - attr(*, ".internal.selfref")=<externalptr> 
 ##  - attr(*, "index")= atomic  
@@ -280,3 +247,19 @@ str(activity_dt)
 
 
 2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
+
+
+```r
+library(lattice)
+day_type_steps_each_interval = activity_dt[ ,sum(imputed_steps), by=list(interval, day_type) ]
+setnames(day_type_steps_each_interval, "V1", "mean_imputed_interval_steps")
+xyplot( mean_imputed_interval_steps ~ interval | day_type, 
+        type = "l",
+        data = day_type_steps_each_interval,
+        main="Steps per Inteval averaged over All days (using imputed data)", 
+        ylab="Average Steps", 
+        xlab="5-Minute Interval",
+        layout=c(1,2) )
+```
+
+![](./PA1_template_w_answers_files/figure-html/weekend_weekday_compare_plot-1.png) 
