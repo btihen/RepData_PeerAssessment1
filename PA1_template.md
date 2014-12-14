@@ -1,9 +1,4 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 ## Loading and preprocessing the data
 
@@ -23,12 +18,20 @@ This is done on loading the data with the appropriate switches:
 
 The code that accomplishes this is:
 
-```{r download_read_data}
+
+```r
 # file already included in assignment -- next line show how to get the data if needed
 # download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity-data.zip", methodi="curl")
 # create a data directory & unzip the data
 data_path = "data"
 dir.create( data_path )
+```
+
+```
+## Warning in dir.create(data_path): 'data' already exists
+```
+
+```r
 unzip("activity.zip", exdir="data", overwrite=TRUE)
 data_file = list.files(path = data_path)[1]
 path_file = file.path(data_path, data_file)
@@ -45,7 +48,8 @@ activity_df = read.table(path_file, header=TRUE, sep=",", na.strings="NA", colCl
 
 1. Make a histogram of the total number of steps taken each day
 
-```{r imputed_steps_each_day_plot}
+
+```r
 # AVERAGE STEPS / DAY
 library(data.table)
 activity_dt = data.table(activity_df)
@@ -54,19 +58,22 @@ setnames(steps_each_day, "V1", "daily_step_total")
 barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (Ingoring missing Observations)")
 ```
 
+![](./PA1_template_files/figure-html/imputed_steps_each_day_plot-1.png) 
+
 
 2. Calculate and report the **mean** and **median** total number of steps taken per day
 
 The mean steps taken per day are: 
-```{r mean_median_daily_steps}
+
+```r
 mean_steps_per_day = mean( steps_each_day$daily_step_total, na.rm=TRUE )
 median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
 ```
 
 Calculation | Results without imputation
 ------------|---------------------------
-*Mean*      | `r options("scipen"=100, "digits"=4);mean_steps_per_day`   
-*Median*    | `r options("scipen"=100, "digits"=4);median_steps_per_day` 
+*Mean*      | 10766.1887   
+*Median*    | 10765 
 
 
 
@@ -74,7 +81,8 @@ Calculation | Results without imputation
 
 1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r interval_activity_plot}
+
+```r
 # calculate interval averages over each day
 interval_steps_mean_dt = activity_dt[,mean(steps, na.rm=TRUE), by=interval]
 setnames(interval_steps_mean_dt, "V1", "average_inverval_steps")
@@ -82,22 +90,26 @@ setnames(interval_steps_mean_dt, "V1", "average_inverval_steps")
 plot( interval_steps_mean_dt, type="l", xlab="5-minute intervals", ylab="average steps", main="Mean Steps per Interval over all Days  (ignoring MISSING Observations)" )
 ```
 
+![](./PA1_template_files/figure-html/interval_activity_plot-1.png) 
+
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-```{r max_steps_in_interval}
+
+```r
 max_interval_steps = interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]
 max_steps_location = which( interval_steps_mean_dt$average_inverval_steps == max_interval_steps)
 max_steps_interval = interval_steps_mean_dt$interval[[max_steps_location]]
 ```
 
-The interval with the maximum steps is: **`r max_steps_interval`**
+The interval with the maximum steps is: **835**
 
 ## Imputing missing values
 
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
 
-```{r missing_observations}
+
+```r
 missing_observations = sum(is.na(activity_dt$steps))
 total_observations = nrow(activity_dt)
 missing_percent = missing_observations / total_observations * 100
@@ -105,10 +117,10 @@ missing_percent = missing_observations / total_observations * 100
 
 Description | Count
 ------------|------
-Missing Observations | `r missing_observations`
-Total Observations   | `r total_observations`
+Missing Observations | 2304
+Total Observations   | 17568
 
-Percentage of missing observations: **`r options("digits"=1);missing_percent`%**
+Percentage of missing observations: **13.1%**
 
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated.
@@ -117,7 +129,8 @@ The strategy used is to will fill-in missing values with the median intervals va
 
 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r fill_missing}
+
+```r
 # calculate each interval's median steps
 interval_steps_median_dt = activity_dt[,median(steps, na.rm=TRUE), by=interval]
 setnames(interval_steps_median_dt, "V1", "median_inverval_steps")
@@ -132,6 +145,36 @@ activity_dt$na_data <- is.na(activity_dt$steps)
 activity_dt$imputed_steps <- activity_dt$steps
 
 activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
+```
+
+```
+##        interval steps       date median_inverval_steps na_data
+##     1:        0    NA 2012-10-01                     0    TRUE
+##     2:        0     0 2012-10-02                     0   FALSE
+##     3:        0     0 2012-10-03                     0   FALSE
+##     4:        0    47 2012-10-04                     0   FALSE
+##     5:        0     0 2012-10-05                     0   FALSE
+##    ---                                                        
+## 17564:     2355     0 2012-11-26                     0   FALSE
+## 17565:     2355     0 2012-11-27                     0   FALSE
+## 17566:     2355     0 2012-11-28                     0   FALSE
+## 17567:     2355     0 2012-11-29                     0   FALSE
+## 17568:     2355    NA 2012-11-30                     0    TRUE
+##        imputed_steps
+##     1:             0
+##     2:             0
+##     3:             0
+##     4:            47
+##     5:             0
+##    ---              
+## 17564:             0
+## 17565:             0
+## 17566:             0
+## 17567:             0
+## 17568:             0
+```
+
+```r
 # create a clean imputed value data frame
 #impute_activity_dt[,c("na_data", "median_inverval_steps") := NULL]
 ```
@@ -141,16 +184,20 @@ activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
 
 * HISTOGRAM of imputed data
 
-```{r imputed_histogram}
+
+```r
 imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
 setnames(imputed_steps_each_day, "V1", "daily_step_total")
 barplot(imputed_steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (with Imputed Observations)")
 ```
 
+![](./PA1_template_files/figure-html/imputed_histogram-1.png) 
+
 
 * CALCULATE -- mean and median
 
-```{r imputed_mean_median}
+
+```r
 imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
 setnames(imputed_steps_each_day, "V1", "daily_step_total")
 imputed_mean_steps_per_day = mean( imputed_steps_each_day$daily_step_total )
@@ -159,8 +206,8 @@ imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total )
 
 Data Used | Mean | Median 
 ----------|------|-------
-Impute Missing Steps | `r options("scipen"=100, "digits"=1);imputed_mean_steps_per_day` | `r imputed_median_steps_per_day`
-Omit Missing Steps   | `r options("scipen"=100, "digits"=1);mean_steps_per_day` | `r median_steps_per_day`
+Impute Missing Steps | 9503.9 | 10395
+Omit Missing Steps   | 10766.2 | 10765
 
 * Do the result differ? If so what is the impact on steps per day?
 
@@ -173,17 +220,36 @@ Ingoring missing values results in calculations that indicate MORE steps per day
 1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
 
-```{r weekday_calc}
+
+```r
 activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
 activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
 activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
 str(activity_dt)
 ```
 
+```
+## Classes 'data.table' and 'data.frame':	17568 obs. of  9 variables:
+##  $ interval             : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ steps                : int  NA 0 0 47 0 0 0 NA 0 34 ...
+##  $ date                 : Date, format: "2012-10-01" "2012-10-02" ...
+##  $ median_inverval_steps: int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ na_data              : logi  TRUE FALSE FALSE FALSE FALSE FALSE ...
+##  $ imputed_steps        : int  0 0 0 47 0 0 0 0 0 34 ...
+##  $ day_of_week          : int  1 2 3 4 5 6 0 1 2 3 ...
+##  $ day_name             : Factor w/ 7 levels "Friday","Monday",..: 2 6 7 5 1 3 4 2 6 7 ...
+##  $ day_type             : Factor w/ 2 levels "Weekday","Weekend": 1 1 1 1 1 2 2 1 1 1 ...
+##  - attr(*, "sorted")= chr "interval"
+##  - attr(*, ".internal.selfref")=<externalptr> 
+##  - attr(*, "index")= atomic  
+##   ..- attr(*, "na_data")= int  2 3 4 5 6 7 9 10 11 12 ...
+```
+
 
 2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
 
-```{r weekend_weekday_compare_plot}
+
+```r
 library(lattice)
 day_type_steps_each_interval = activity_dt[ ,sum(imputed_steps), by=list(interval, day_type) ]
 setnames(day_type_steps_each_interval, "V1", "mean_imputed_interval_steps")
@@ -194,5 +260,6 @@ xyplot( mean_imputed_interval_steps ~ interval | day_type,
         ylab="Average Steps", 
         xlab="5-Minute Interval",
         layout=c(1,2) )
-
 ```
+
+![](./PA1_template_files/figure-html/weekend_weekday_compare_plot-1.png) 

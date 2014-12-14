@@ -5,6 +5,7 @@ output:
     keep_md: true
 ---
 
+
 ## Loading and preprocessing the data
 
 1. Load the data (i.e. `read.csv()`)
@@ -51,64 +52,61 @@ library(data.table)
 activity_dt = data.table(activity_df)
 steps_each_day = activity_dt[,sum(steps),by=date]
 setnames(steps_each_day, "V1", "daily_step_total")
-barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (Ingoring missing Observations)")
+barplot(steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
 ```
 
 
 2. Calculate and report the **mean** and **median** total number of steps taken per day
 
 The mean steps taken per day are: 
-```{r mean_median_daily_steps}
+```{r mean_daily_steps}
 mean_steps_per_day = mean( steps_each_day$daily_step_total, na.rm=TRUE )
-median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
+mean_steps_per_day
 ```
 
-Calculation | Results without imputation
-------------|---------------------------
-*Mean*      | `r options("scipen"=100, "digits"=4);mean_steps_per_day`   
-*Median*    | `r options("scipen"=100, "digits"=4);median_steps_per_day` 
-
+The median steps taken per day are: 
+```{r median_daily_steps}
+median_steps_per_day = median( steps_each_day$daily_step_total, na.rm=TRUE )
+median_steps_per_day
+```
 
 
 ## What is the average daily activity pattern?
 
 1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r interval_activity_plot}
+```{r interval_activity, eval=FALSE}
 # calculate interval averages over each day
 interval_steps_mean_dt = activity_dt[,mean(steps, na.rm=TRUE), by=interval]
 setnames(interval_steps_mean_dt, "V1", "average_inverval_steps")
 # graph interval averages as time series plot
-plot( interval_steps_mean_dt, type="l", xlab="5-minute intervals", ylab="average steps", main="Mean Steps per Interval over all Days  (ignoring MISSING Observations)" )
+plot( interval_steps_mean_dt, type="l", xlab="interval", ylab="average steps", main="Average Steps at each Interval over all Days" )
 ```
-
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
+The interval with the maximum steps is: 
 ```{r max_steps_in_interval}
-max_interval_steps = interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]
-max_steps_location = which( interval_steps_mean_dt$average_inverval_steps == max_interval_steps)
-max_steps_interval = interval_steps_mean_dt$interval[[max_steps_location]]
+activity_dt[,max(steps, na.rm=TRUE )]
 ```
-
-The interval with the maximum steps is: **`r max_steps_interval`**
+The interval with the maximum average steps is: 
+```{r max_avg_steps_in_interval}
+interval_steps_mean_dt[,max(average_inverval_steps, na.rm=TRUE)]
+```
 
 ## Imputing missing values
 
 1. Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with `NA`s)
 
-```{r missing_observations}
-missing_observations = sum(is.na(activity_dt$steps))
-total_observations = nrow(activity_dt)
-missing_percent = missing_observations / total_observations * 100
+The number of missing values in the data set are: 
+```{r observations_missing_value_count}
+sum(is.na(activity_dt$steps))
 ```
 
-Description | Count
-------------|------
-Missing Observations | `r missing_observations`
-Total Observations   | `r total_observations`
-
-Percentage of missing observations: **`r options("digits"=1);missing_percent`%**
+The total number of observations in the data set are: 
+```{r total_observations}
+nrow(activity_dt)
+```
 
 
 2. Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated.
@@ -118,81 +116,70 @@ The strategy used is to will fill-in missing values with the median intervals va
 3. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
 ```{r fill_missing}
-# calculate each interval's median steps
+# replace each missting value with the mean from the interval over each day
+# interval step medians
 interval_steps_median_dt = activity_dt[,median(steps, na.rm=TRUE), by=interval]
 setnames(interval_steps_median_dt, "V1", "median_inverval_steps")
 
 # build a copy for imputed values
-activity_dt <- merge(activity_dt, interval_steps_median_dt, by="interval", all=FALSE)
-
+calculated_activity_dt <- merge(activity_dt, interval_steps_median_dt, by="interval", all=FALSE)
 # mark observations with missing data
-activity_dt$na_data <- is.na(activity_dt$steps)
-
-# copy the steps to create an imputed steps field
-activity_dt$imputed_steps <- activity_dt$steps
-
-activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
+calculated_activity_dt$na_data <- is.na(calculated_activity_dt$steps)
+# make a new variable for calculated steps (start with the observed steps)
+calculated_activity_dt$imputed_steps <- calculated_activity_dt$steps
+# any calculated steps with missing data is replaced with the median value (over the study) for that interval
+calculated_activity_dt[na_data==TRUE, imputed_steps := median_inverval_steps]
 # create a clean imputed value data frame
-#impute_activity_dt[,c("na_data", "median_inverval_steps") := NULL]
-```
+imputed_activity_df <- data.frame( calculated_activity_dt$interval, calculated_activity_dt$date, calculated_activity_dt$imputed_steps)
+setnames(imputed_activity_df, "calculated_activity_dt.imputed_steps", "steps")
+setnames(imputed_activity_df, "calculated_activity_dt.interval", "interval")
+setnames(imputed_activity_df, "calculated_activity_dt.date", "date")
+imputed_activity_dt = data.table( imputed_activity_df )
 
+```
 
 4. Make a histogram of the total number of steps taken each day and Calculate and report the **mean** and **median** total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
 
-* HISTOGRAM of imputed data
-
-```{r imputed_histogram}
-imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
-setnames(imputed_steps_each_day, "V1", "daily_step_total")
-barplot(imputed_steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day (with Imputed Observations)")
-```
-
-
-* CALCULATE -- mean and median
-
-```{r imputed_mean_median}
-imputed_steps_each_day = activity_dt[,sum(imputed_steps),by=date]
+```{r imputed_calculations}
+imputed_steps_each_day = imputed_activity_dt[,sum(steps),by=date]
 setnames(imputed_steps_each_day, "V1", "daily_step_total")
 imputed_mean_steps_per_day = mean( imputed_steps_each_day$daily_step_total )
 imputed_median_steps_per_day = median( imputed_steps_each_day$daily_step_total )
 ```
 
-Data Used | Mean | Median 
-----------|------|-------
-Impute Missing Steps | `r options("scipen"=100, "digits"=1);imputed_mean_steps_per_day` | `r imputed_median_steps_per_day`
-Omit Missing Steps   | `r options("scipen"=100, "digits"=1);mean_steps_per_day` | `r median_steps_per_day`
+Average number of steps per day (using imputed data): 
+```{r}
+mean( imputed_steps_each_day$daily_step_total )
+```
 
-* Do the result differ? If so what is the impact on steps per day?
+Median number of steps per day (using imputed data): 
+```{r}
+median( imputed_steps_each_day$daily_step_total )
+```
 
-Ingoring missing values and imputing missing values produces different results.
-Ingoring missing values results in calculations that indicate MORE steps per day than with imputed values (indicating possibly inflated results).
 
+
+
+
+* histogram of total steps each day of imputed data
+
+```{r imputed_steps_each_day_plot}
+barplot(imputed_steps_each_day$daily_step_total, xlab="date", ylab="steps", main="Total Steps taken each Day")
+```
+
+* mean and median of imputed data
+
+The mean steps each day with imputed data is: `r mean(imputed_steps_each_day$daily_step_total)`
+The median steps each day with imputed data is: `r median(imputed_steps_each_day$daily_step_total)`
+
+* same or different than non-imputed data?
+
+* impact of imputing data?
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 1. Create a new factor variable in the dataset with two levels -- "weekday" and "weekend" indicating whether a given date is a weekday or weekend day.
 
 
-```{r weekday_calc}
-activity_dt$day_of_week <- as.POSIXlt(activity_dt$date)$wday
-activity_dt$day_name <- as.factor( c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")[as.POSIXlt(activity_dt$date)$wday + 1] )
-activity_dt$day_type <- as.factor( c("Weekend", "Weekday", "Weekday", "Weekday", "Weekday", "Weekday", "Weekend")[as.POSIXlt(activity_dt$date)$wday + 1] )
-str(activity_dt)
-```
-
 
 2. Make a panel plot containing a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). The plot should look something like the following, which was created using **simulated data**:
-
-```{r weekend_weekday_compare_plot}
-library(lattice)
-day_type_steps_each_interval = activity_dt[ ,sum(imputed_steps), by=list(interval, day_type) ]
-setnames(day_type_steps_each_interval, "V1", "mean_imputed_interval_steps")
-xyplot( mean_imputed_interval_steps ~ interval | day_type, 
-        type = "l",
-        data = day_type_steps_each_interval,
-        main="Steps per Inteval averaged over All days (using imputed data)", 
-        ylab="Average Steps", 
-        xlab="5-Minute Interval",
-        layout=c(1,2) )
-
-```
